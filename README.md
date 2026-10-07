@@ -58,3 +58,47 @@ Validation reacts according to how certain it is that the data is broken:
 | Hard rule | Impossible in real data | `high < low`, price ≤ 0 | Move the row to quarantine, log `WARNING` |
 | Dataset-level | The whole response is broken | missing `close` column, too many invalid rows | Stop the run, log `ERROR` |
 
+Hard rules (per row):
+
+- `high ≥ open`, `high ≥ close`, `high ≥ low`
+- `low ≤ open`, `low ≤ close`
+- all prices > 0, `volume ≥ 0`
+- date is present, not in the future, and unique per asset (no duplicates)
+
+Thresholds (e.g. the 50 % daily return limit and the maximum share of invalid rows) are configurable. A soft-rule threshold that suits Bitcoin may be too loose for a stable index fund.
+
+## Time handling
+
+- Dates in the clean dataset are stored as `YYYY-MM-DD`, not as timestamps. Daily data has no time of day, and converting a date to midnight UTC and back in another timezone can silently shift it to the previous day.
+- The meaning of a "day" differs by asset:
+  - **Bitcoin:** a UTC calendar day (00:00–24:00 UTC). Crypto trades 24/7, so the daily close is a convention chosen by the data provider.
+  - **NVIDIA:** a New York Stock Exchange trading day.
+- **Only completed days are stored.** The current day's row is still changing (its close is just the latest price so far), so it is skipped. Completeness is checked in UTC.
+- Holding periods are measured in **calendar days**, so a 30-day period means the same amount of time for both assets. If the end date falls on a day without trading (e.g. a weekend for NVIDIA), the last available price before it is used (as-of).
+
+## Out of scope for v1
+
+| Not in v1 | Reason |
+|---|---|
+| Machine learning | A reliable data pipeline comes first |
+| Buy/sell recommendations | The project analyses history; it does not give investment advice |
+| Intraday or real-time data | Daily data is enough for the question being asked |
+| Scheduling / orchestration (Airflow) | The pipeline is first built and run as a plain Python program |
+| Database (PostgreSQL), Docker | Added when there is a concrete need for them |
+
+## Roadmap
+
+1. **Market data fundamentals:** API → raw data → validation → transformation → storage → analysis *(current)*
+2. **Data Engineering:** incremental loading, Parquet / PostgreSQL, tests, logging
+3. **Orchestration:** Docker, Airflow, scheduling, retries, backfills
+4. **Analytics & feature engineering:** returns, volatility, drawdown, momentum
+5. **Machine learning:** baseline, time-series validation, experiment comparison
+6. **MLOps:** MLflow, model registry, CI/CD, monitoring
+
+## Development environment
+
+The project is developed **Linux-first** (WSL2 on Windows) and is intended to run natively on any Linux machine after cloning. Configuration and secrets are provided through environment variables.
+
+## Disclaimer
+
+This project is for learning purposes only and does not constitute investment advice.
