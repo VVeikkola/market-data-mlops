@@ -17,11 +17,12 @@ COLUMNS = [
     "close",
     "adj_close",
     "volume",
+    "adj_volume",
     "source",
     "raw_file"
 ]
 
-#Coinbase camdles are listed without field names in this order
+#Coinbase candles are listed without field names in this order
 COINBASE_FIELDS = [
     "time",
     "low",
@@ -57,7 +58,8 @@ def load_tiingo(path: Path, symbol: str) -> pd.DataFrame:
     #Tiingo writes trading date as "2024-06-05T00:00:00.000Z". Keep only date apart because of timezone issues
     df["date"] = pd.to_datetime(df["date"].str[0:10], format="%Y-%m-%d")
     df = df.rename(columns={
-        "adjClose": "adj_close"
+        "adjClose": "adj_close",
+        "adjVolume": "adj_volume"
     })
     df["symbol"] = symbol
     df["source"] = "tiingo"
@@ -67,7 +69,7 @@ def load_tiingo(path: Path, symbol: str) -> pd.DataFrame:
 def load_coinbase(run_dir: Path, product_id: str) -> pd.DataFrame:
     """Read alll pages of one Coinbase run into common schema."""
     frames = []
-    for path in sorted(run_dir.glob("*json")):
+    for path in sorted(run_dir.glob("*.json")):
         candles = json.loads(path.read_text(encoding="utf-8"))
         page = pd.DataFrame.from_records(candles, columns=COINBASE_FIELDS)
         page["raw_file"] = str(path.relative_to(PROJECT_ROOT))
@@ -77,6 +79,7 @@ def load_coinbase(run_dir: Path, product_id: str) -> pd.DataFrame:
     #Unix time is UTC and daily candles start at 00:00:00 UTC.
     df["date"] = pd.to_datetime(df["time"], unit="s")
     df["adj_close"] = df["close"]  # Crypto has no splits or dividends, so adjusted close is the same as close
+    df["adj_volume"] = df["volume"]  # Crypto has no splits, so adjusted volume is the same as volume
     df["symbol"] = product_id
     df["source"] = "coinbase"
     return df[COLUMNS]
