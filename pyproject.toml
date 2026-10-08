@@ -3,6 +3,7 @@ name = "market-data-mlops"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
+    "pandas>=3.0.6",
     "python-dotenv>=1.2.4",
     "requests>=2.34.2",
 ]
