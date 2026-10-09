@@ -56,7 +56,7 @@ Validation reacts according to how certain it is that the data is broken:
 |---|---|---|---|
 | Soft rule | Unlikely but possible | \|daily return\| > 50 % | Keep the row, flag it, log `WARNING` |
 | Hard rule | Impossible in real data | `high < low`, price ≤ 0 | Move the row to quarantine, log `WARNING` |
-| Dataset-level | The whole response is broken | missing `close` column, too many invalid rows | Stop the run, log `ERROR` |
+| Dataset-level | The whole response is broken | missing `close` column, too many invalid rows, missing calendar days (crypto) | Stop the run, log `ERROR` |
 
 Hard rules (per row):
 
