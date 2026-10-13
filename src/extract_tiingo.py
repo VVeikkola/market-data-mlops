@@ -1,63 +1,69 @@
 import os
 import sys
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import date, datetime, timezone
 
 import requests
 from dotenv import load_dotenv
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+from config import PROJECT_ROOT, load_config
+
 RAW_DIR = PROJECT_ROOT / "data" / "raw" / "tiingo"
+BASE_URL = "https://api.tiingo.com/tiingo/daily"
+TIMEOUT_SECONDS = 10
 
-# Load environment variables from .env file
-load_dotenv()
 
-# read the Tiingo API key from environment variables
-api_key = os.getenv("TIINGO_API_KEY")
+def fetch_symbol(symbol: str, start_date: date, end_date: date, api_key: str) -> int:
+    """Fetch daily prices for one symbol, save the raw response and return the row count."""
+    url = f"{BASE_URL}/{symbol}/prices"
+    headers = {"Authorization": "Token " + api_key}
+    params = {
+        "startDate": start_date.isoformat(),
+        "endDate": end_date.isoformat(),
+    }
 
-if not api_key:
-    sys.exit("TIINGO_API_KEY not found in environment variables. Copy .env.example to .env and add your key")
+    response = requests.get(url, headers=headers, params=params, timeout=TIMEOUT_SECONDS)
+    response.raise_for_status()
 
-symbol = "NVDA"
-url = f"https://api.tiingo.com/tiingo/daily/{symbol}/prices"
+    # Save the raw response exactly as received, one file per fetch
+    fetched_at = datetime.now(timezone.utc)
+    output_dir = RAW_DIR / symbol
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / f"{fetched_at:%Y%m%dT%H%M%SZ}.json"
+    with output_path.open("x", encoding="utf-8") as f:
+        f.write(response.text)
 
-headers = {
-    "Authorization": "Token " + api_key
-}
+    rows = response.json()
+    print(f"{symbol}: saved {len(rows)} rows to {output_path.relative_to(PROJECT_ROOT)}")
+    return len(rows)
 
-params = {
-    "startDate": "2024-06-05",
-    "endDate": "2024-06-12",
-}
 
-timeout = 10
+def main() -> int:
+    """Fetch every configured Tiingo symbol. Return the process exit code."""
+    load_dotenv()
+    api_key = os.getenv("TIINGO_API_KEY")
+    if not api_key:
+        print(
+            "TIINGO_API_KEY not found in environment variables. "
+            "Copy .env.example to .env and add your key",
+            file=sys.stderr,
+        )
+        return 1
 
-# send the request to the Tiingo API
-try:
-    response = requests.get(
-        url,
-        headers=headers,
-        params=params,
-        timeout=timeout,
-    )
-except requests.exceptions.RequestException as e:
-    print(f"Request failed: {e}", file=sys.stderr)
-    sys.exit(1)
+    config = load_config()
 
-# Check if the request was successful
-if response.status_code != 200:
-    print(f"Error: {response.status_code}", file=sys.stderr)
-    print(response.text, file=sys.stderr)
-    sys.exit(1)
+    for symbol in config.tiingo_symbols:
+        try:
+            fetch_symbol(symbol, config.start_date, config.end_date, api_key)
+        except requests.exceptions.HTTPError as e:
+            print(f"{symbol}: {e}", file=sys.stderr)
+            print(e.response.text, file=sys.stderr)
+            return 1
+        except requests.exceptions.RequestException as e:
+            print(f"{symbol}: request failed: {e}", file=sys.stderr)
+            return 1
 
-# Save the raw response exactly as received, one file per fetch
-fetched_at = datetime.now(timezone.utc)
-output_dir = RAW_DIR / symbol
-output_dir.mkdir(parents=True, exist_ok=True)
-output_path = output_dir / f"{fetched_at:%Y%m%dT%H%M%SZ}.json"
-with output_path.open("x", encoding="utf-8") as f:
-    f.write(response.text)
+    return 0
 
-rows = response.json()
-print(f"Received rows: {len(rows)}")
-print(f"Saved raw response to: {output_path.relative_to(PROJECT_ROOT)}")
+
+if __name__ == "__main__":
+    sys.exit(main())

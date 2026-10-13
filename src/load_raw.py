@@ -3,8 +3,9 @@ from pathlib import Path
 
 import pandas as pd
 
+from config import PROJECT_ROOT
+
 #Project root is the parent of the src directory
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
 RAW_DIR = PROJECT_ROOT / "data" / "raw"
 
 ##Common schema: every source is converted to these columns in this order
