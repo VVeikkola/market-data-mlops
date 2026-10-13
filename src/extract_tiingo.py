@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from datetime import date, datetime, timezone
@@ -6,11 +7,13 @@ import requests
 from dotenv import load_dotenv
 
 from config import PROJECT_ROOT, load_config
+from logging_setup import setup_logging
 
 RAW_DIR = PROJECT_ROOT / "data" / "raw" / "tiingo"
 BASE_URL = "https://api.tiingo.com/tiingo/daily"
 TIMEOUT_SECONDS = 10
 
+logger = logging.getLogger(__name__)
 
 def fetch_symbol(symbol: str, start_date: date, end_date: date, api_key: str) -> int:
     """Fetch daily prices for one symbol, save the raw response and return the row count."""
@@ -33,33 +36,40 @@ def fetch_symbol(symbol: str, start_date: date, end_date: date, api_key: str) ->
         f.write(response.text)
 
     rows = response.json()
-    print(f"{symbol}: saved {len(rows)} rows to {output_path.relative_to(PROJECT_ROOT)}")
+    logger.info( "%s: saved %d rows to %s", symbol, len(rows), output_path.relative_to(PROJECT_ROOT))
     return len(rows)
 
 
 def main() -> int:
     """Fetch every configured Tiingo symbol. Return the process exit code."""
+    setup_logging()
+
     load_dotenv()
     api_key = os.getenv("TIINGO_API_KEY")
     if not api_key:
-        print(
+        logger.error(
             "TIINGO_API_KEY not found in environment variables. "
-            "Copy .env.example to .env and add your key",
-            file=sys.stderr,
+            "Copy .env.example to .env and add your key"
         )
         return 1
 
     config = load_config()
+    logger.info(
+        "Fetching %d Tiingo symbol(s) from %s to %s",
+        len(config.tiingo_symbols),
+        config.start_date,
+        config.end_date,
+    )
 
     for symbol in config.tiingo_symbols:
         try:
             fetch_symbol(symbol, config.start_date, config.end_date, api_key)
         except requests.exceptions.HTTPError as e:
-            print(f"{symbol}: {e}", file=sys.stderr)
-            print(e.response.text, file=sys.stderr)
+            logger.error("%s: %s", symbol, e)
+            logger.error("%s: response body: %s", symbol, e.response.text)
             return 1
         except requests.exceptions.RequestException as e:
-            print(f"{symbol}: request failed: {e}", file=sys.stderr)
+            logger.error("%s: request failed: %s", symbol, e)
             return 1
 
     return 0
