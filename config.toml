@@ -13,3 +13,4 @@ products = ["BTC-USD"]
 
 [validation]
 max_abs_daily_return = 0.5
+max_invalid_share = 0.05

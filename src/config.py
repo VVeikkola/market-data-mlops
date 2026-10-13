@@ -17,6 +17,7 @@ class Config:
     tiingo_symbols: list[str]
     coinbase_products: list[str]
     max_abs_daily_return: float
+    max_invalid_share: float
 
 def _validate_symbols(values: object, field: str) -> None:
     """Raise ValueError unless values is a non-empty list of non-empty strings."""
@@ -38,6 +39,7 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
         tiingo_symbols=raw["tiingo"]["symbols"],
         coinbase_products=raw["coinbase"]["products"],
         max_abs_daily_return=raw["validation"]["max_abs_daily_return"],
+        max_invalid_share=raw["validation"]["max_invalid_share"]
     )
 
     if not isinstance(config.start_date, date) or not isinstance(config.end_date, date):
@@ -55,8 +57,11 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
     _validate_symbols(config.tiingo_symbols, "tiingo.symbols")
     _validate_symbols(config.coinbase_products, "coinbase.products")
 
-    if not isinstance(config.max_abs_daily_return, (int, float)) or config.max_abs_daily_return <= 0:
-        raise ValueError("max_abs_daily_return must be a positive number like 0.5")
+    if (
+        not isinstance(config.max_invalid_share, (int, float))
+        or not 0 <= config.max_invalid_share <= 1
+    ):
+        raise ValueError("max_invalid_share must be a number between 0 and 1, like 0.05")
 
     return config
 

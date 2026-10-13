@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from config import PROJECT_ROOT
+from config import PROJECT_ROOT, Config
 
 #Project root is the parent of the src directory
 RAW_DIR = PROJECT_ROOT / "data" / "raw"
@@ -84,6 +84,12 @@ def load_coinbase(run_dir: Path, product_id: str) -> pd.DataFrame:
     df["symbol"] = product_id
     df["source"] = "coinbase"
     return df[COLUMNS]
+
+def load_all_raw(config: Config) -> pd.DataFrame:
+    """Load the latest raw data for every configured symbol into one table."""
+    frames = [load_tiingo(latest_tiingo_file(s), s) for s in config.tiingo_symbols]
+    frames += [load_coinbase(latest_coinbase_run(p), p) for p in config.coinbase_products]
+    return pd.concat(frames, ignore_index=True)
 
 if __name__ == "__main__":
     nvda = load_tiingo(latest_tiingo_file("NVDA"), "NVDA")
