@@ -15,3 +15,8 @@ def test_one_day_returns():
     assert len(windows) == 2  # the last day has no "next day", so no window
     assert windows["return"].iloc[0] == pytest.approx(0.10)
     assert windows["return"].iloc[1] == pytest.approx(-0.18181818)
+
+def test_too_long_holding_period_raises():
+    prices = make_prices([100, 110, 90]) #covers 2 days
+    with pytest.raises(ValueError, match="Cannot hold 3 days"):
+        holding_period_returns(prices, days=3)

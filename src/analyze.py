@@ -28,8 +28,7 @@ def holding_period_returns(prices: pd.DataFrame, days: int) -> pd.DataFrame:
 
     if windows.empty:
         data_days = (prices["date"].max() - prices["date"].min()).days
-        raise ValueError(f"No holding period windows found for {data_days} days in the price data")
-    
+        raise ValueError(f"Cannot hold {days} days: the data only covers {data_days} days")
     # As-of: if the end date has no price (weekend, holiday), use the last price before it
     windows = pd.merge_asof(
         windows,
