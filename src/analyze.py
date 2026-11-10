@@ -26,6 +26,10 @@ def holding_period_returns(prices: pd.DataFrame, days: int) -> pd.DataFrame:
     windows["end_date"] = windows["start_date"] + pd.Timedelta(days=days)
     windows = windows[windows["end_date"] <= prices["date"].max()] # drop windows that go past the last price
 
+    if windows.empty:
+        data_days = (prices["date"].max() - prices["date"].min()).days
+        raise ValueError(f"No holding period windows found for {data_days} days in the price data")
+    
     # As-of: if the end date has no price (weekend, holiday), use the last price before it
     windows = pd.merge_asof(
         windows,
