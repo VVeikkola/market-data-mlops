@@ -1,3 +1,4 @@
+import argparse
 import logging
 
 import pandas as pd
@@ -50,21 +51,32 @@ def summarize(windows: pd.DataFrame, days: int) -> dict[str, float]:
         "share_positive": (returns > 0).mean(),
     }
 
+def parse_args() -> argparse.Namespace:
+    """Read symbol and holding days from the command line"""
+    parser = argparse.ArgumentParser(description="Analyze holding period returns for a symbol.")
+    parser.add_argument("symbol", help="symbol in the clean dataset (e.g., BTC-USD)")
+    parser.add_argument("days", type=int, help="number of calendar days to hold (e.g. 30)")
+    args = parser.parse_args()
+
+    if args.days < 1:
+        parser.error(f"Days must be a positive integer, got {args.days}")
+    return args
+
+
 if __name__ == "__main__":
     setup_logging()
-    symbol = "BTC-USD"
-    days = 30
+    args = parse_args()
 
-    windows = holding_period_returns(load_prices(symbol), days)
-    summary = summarize(windows, days)
+    windows = holding_period_returns(load_prices(args.symbol), args.days)
+    summary = summarize(windows, args.days)
 
-    print(f"{symbol}, held {days} days:")
+    print(f"{args.symbol}, held {args.days} days:")
     for name, value in summary.items():
-       text =  f"{value:.1%}" if isinstance(value, float) else value
-       print(f"  {name:<20}: {text}")
+        text = f"{value:.1%}" if isinstance(value, float) else value
+        print(f"  {name:<20}: {text}")
 
     if summary["independent_periods"] < MIN_INDEPENDENT_PERIODS:
-       logger.warning(
+        logger.warning(
             "Only %d independent periods: treat these numbers with caution",
             summary["independent_periods"],
         )
