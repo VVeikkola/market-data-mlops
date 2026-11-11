@@ -1,0 +1,38 @@
+import pandas as pd
+
+from validate import hard_rule_violations
+
+def make_row(**overrides) -> pd.DataFrame:
+    """One valid price row as a table. Pass a column name to change its value"""
+    row = {
+        "symbol": "test",
+        "date": pd.Timestamp("2024-01-02"),
+        "open": 100.0,
+        "high": 110.0,
+        "low": 90.0,
+        "close": 100.0,
+        "adj_close": 100.0,
+        "volume": 1000,
+    }
+    row.update(overrides)
+    return pd.DataFrame([row])
+
+def test_valid_row_breaks_no_rule():
+    df = make_row()
+    violations = hard_rule_violations(df)
+
+    for rule, mask in violations.items():
+        assert not mask.any(), f"Rule {rule} should not be violated"
+
+def test_negative_volume_is_flagged():
+    df = make_row(volume=-1)
+    violations = hard_rule_violations(df)
+
+    assert violations["negative_volume"].all()
+
+def test_high_below_low_is_flagged():
+    df = make_row(high=90, low=100)
+    violations = hard_rule_violations(df)
+
+    assert violations["high_below_low"].all()
+    
