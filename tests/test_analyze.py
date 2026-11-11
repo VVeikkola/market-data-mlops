@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from analyze import holding_period_returns
+from analyze import holding_period_returns, summarize
 
 def make_prices(prices: list[float])-> pd.DataFrame:
     """Small fake price table: one price per day starting 2024-01-01."""
@@ -20,3 +20,15 @@ def test_too_long_holding_period_raises():
     prices = make_prices([100, 110, 90]) #covers 2 days
     with pytest.raises(ValueError, match="Cannot hold 3 days"):
         holding_period_returns(prices, days=3)
+
+def test_summarize_two_day_windows():
+    prices = make_prices([100, 110, 90, 120, 100]) #Covers 4 days
+    windows = holding_period_returns(prices, days=2)
+
+    summary = summarize(windows, days=2)
+
+    assert summary["windows"] == 3
+    assert summary["independent_periods"] == 2
+    assert summary["share_positive"] == pytest.approx(2 / 3)
+    assert summary["best"] == pytest.approx(100 / 90 - 1)
+    assert summary["worst"] == pytest.approx(90 / 100 - 1)
