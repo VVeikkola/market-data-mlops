@@ -70,4 +70,9 @@ def test_future_date_is_flagged():
 
     assert violations["future_date"].all()
     assert not violations["missing_date"].any()
-    
+
+def test_duplicate_date_symbol_is_flagged():
+    df = pd.concat([make_row(), make_row()], ignore_index=True)
+    violations = hard_rule_violations(df)
+
+    assert violations["duplicate_date_symbol"].all()
