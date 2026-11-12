@@ -41,4 +41,4 @@ def test_high_below_open_is_flagged():
     violations = hard_rule_violations(df)
 
     assert violations["high_below_open_or_close"].all()
-    assert not violations["high_below_low"].all()
+    assert not violations["high_below_low"].any()
