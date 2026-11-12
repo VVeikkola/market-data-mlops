@@ -49,3 +49,11 @@ def test_low_above_open_is_flagged():
 
     assert violations["low_above_open_or_close"].all()
     assert not violations["high_below_low"].any()
+
+def test_non_positive_price_is_flagged():
+    df = make_row(adj_close=0)
+    violations = hard_rule_violations(df)
+
+    assert violations["non_positive_price"].all()
+    assert not violations["low_above_open_or_close"].any()
+    
