@@ -56,4 +56,18 @@ def test_non_positive_price_is_flagged():
 
     assert violations["non_positive_price"].all()
     assert not violations["low_above_open_or_close"].any()
+
+def test_missing_date_is_flagged():
+    df = make_row(date=pd.NaT)
+    violations = hard_rule_violations(df)
+
+    assert violations["missing_date"].all()
+    assert not violations["future_date"].any()
+
+def test_future_date_is_flagged():
+    df = make_row(date=pd.Timestamp.now() + pd.Timedelta(days=1))
+    violations = hard_rule_violations(df)
+
+    assert violations["future_date"].all()
+    assert not violations["missing_date"].any()
     
