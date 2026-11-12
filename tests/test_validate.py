@@ -1,6 +1,6 @@
 import pandas as pd
 
-from validate import hard_rule_violations
+from validate import hard_rule_violations, split_by_hard_rules
 
 def make_row(**overrides) -> pd.DataFrame:
     """One valid price row as a table. Pass a column name to change its value"""
@@ -76,3 +76,17 @@ def test_duplicate_date_symbol_is_flagged():
     violations = hard_rule_violations(df)
 
     assert violations["duplicate_date_symbol"].all()
+
+def test_row_breaking_two_rules_gets_both_names():
+
+    good = make_row()
+    bad = make_row(open=0, date=pd.Timestamp("2024-01-03"))
+    df = pd.concat([good, bad], ignore_index=True)
+
+    valid, quarantined = split_by_hard_rules(df)
+    failed = quarantined["failed_rules"].iloc[0]
+
+    assert len(valid) == 1
+    assert len(quarantined) == 1
+    assert "non_positive_price" in failed
+    assert "low_above_open_or_close" in failed
