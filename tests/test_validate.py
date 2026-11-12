@@ -1,6 +1,6 @@
 import pandas as pd
 
-from validate import hard_rule_violations, split_by_hard_rules
+from validate import hard_rule_violations, split_by_hard_rules, flag_suspicious_returns
 
 def make_row(**overrides) -> pd.DataFrame:
     """One valid price row as a table. Pass a column name to change its value"""
@@ -90,3 +90,18 @@ def test_row_breaking_two_rules_gets_both_names():
     assert len(quarantined) == 1
     assert "non_positive_price" in failed
     assert "low_above_open_or_close" in failed
+
+def test_suspicious_return_flags_only_big_jump():
+    df = pd.concat(
+        [
+            make_row(date=pd.Timestamp("2024-01-02"), adj_close=100.0),
+            make_row(date=pd.Timestamp("2024-01-03"), adj_close=110.0),
+            make_row(date=pd.Timestamp("2024-01-04"), adj_close=176.0),
+        ],
+        ignore_index=True,
+    )
+
+    result = flag_suspicious_returns(df, 0.5)
+
+    assert result["suspicious_return"].tolist() == [False, False, True]
+    
