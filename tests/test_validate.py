@@ -1,6 +1,11 @@
 import pandas as pd
 
-from validate import hard_rule_violations, split_by_hard_rules, flag_suspicious_returns
+from validate import (
+    flag_suspicious_returns,
+    hard_rule_violations,
+    missing_calendar_days,
+    split_by_hard_rules,
+)
 
 def make_row(**overrides) -> pd.DataFrame:
     """One valid price row as a table. Pass a column name to change its value"""
@@ -105,3 +110,9 @@ def test_suspicious_return_flags_only_big_jump():
 
     assert result["suspicious_return"].tolist() == [False, False, True]
     
+def test_missing_calendar_days_finds_the_gap():
+    dates = pd.Series([pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-04")])
+
+    missing = missing_calendar_days(dates, pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-04"))
+
+    assert missing.tolist() == [pd.Timestamp("2024-01-03")]
