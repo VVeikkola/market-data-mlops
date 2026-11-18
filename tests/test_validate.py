@@ -1,10 +1,14 @@
+from datetime import date
+
 import pandas as pd
 
+from config import Config
 from validate import (
     flag_suspicious_returns,
     hard_rule_violations,
     missing_calendar_days,
     split_by_hard_rules,
+    validate_prices,
 )
 
 def make_row(**overrides) -> pd.DataFrame:
@@ -21,6 +25,19 @@ def make_row(**overrides) -> pd.DataFrame:
     }
     row.update(overrides)
     return pd.DataFrame([row])
+
+def make_config(**overrides) -> Config:
+    """A small valid Config for tests. Pass a field name to change its value."""
+    values = {
+        "start_date": date(2024, 1, 2),
+        "end_date": date(2024, 1, 4),
+        "tiingo_symbols": ["NVDA"],
+        "coinbase_products": ["BTC-USD"],
+        "max_abs_daily_return": 0.5,
+        "max_invalid_share": 0.05,
+    }
+    values.update(overrides)
+    return Config(**values)
 
 def test_valid_row_breaks_no_rule():
     df = make_row()
@@ -116,3 +133,10 @@ def test_missing_calendar_days_finds_the_gap():
     missing = missing_calendar_days(dates, pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-04"))
 
     assert missing.tolist() == [pd.Timestamp("2024-01-03")]
+
+def test_empty_dataset_is_an_error():
+    df = make_row().iloc[0:0]
+
+    result = validate_prices(df, make_config())
+
+    assert result.errors == ["Dataset is empty"]
