@@ -4,7 +4,7 @@
 
 A learning-focused data pipeline that collects daily market data for a stock (NVIDIA) and a cryptocurrency (Bitcoin), validates it, and analyses what different holding periods would have returned historically.
 
-> **Status:** v1 requirements defined, implementation in progress.
+> **Status:** v1 pipeline works locally (extract → validate → transform → analyse), with tests and CI. Next: one pipeline command and daily incremental loading.
 
 ## Why this project exists
 
