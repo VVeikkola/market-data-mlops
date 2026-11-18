@@ -151,3 +151,16 @@ def test_too_many_invalid_rows_is_an_error():
     assert len(result.quarantined) == 1
     assert len(result.errors) == 1
     assert "broke hard rules" in result.errors[0]
+
+def test_missing_crypto_day_is_an_error():
+    df = pd.concat(
+        [
+            make_row(source="coinbase", symbol="BTC-USD", date=pd.Timestamp("2024-01-02")),
+            make_row(source="coinbase", symbol="BTC-USD", date=pd.Timestamp("2024-01-04")),
+        ],
+        ignore_index=True,
+    )
+
+    result = validate_prices(df, make_config())
+
+    assert result.errors == ["BTC-USD: 1 missing calendar day(s), first: 2024-01-03"]
