@@ -140,3 +140,14 @@ def test_empty_dataset_is_an_error():
     result = validate_prices(df, make_config())
 
     assert result.errors == ["Dataset is empty"]
+
+def test_too_many_invalid_rows_is_an_error():
+    good = make_row(source="tiingo")
+    bad = make_row(source="tiingo", volume=-1, date=pd.Timestamp("2024-01-03"))
+    df = pd.concat([good, bad], ignore_index=True)
+
+    result = validate_prices(df, make_config(max_invalid_share=0.05))
+
+    assert len(result.quarantined) == 1
+    assert len(result.errors) == 1
+    assert "broke hard rules" in result.errors[0]
