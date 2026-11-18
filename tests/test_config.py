@@ -36,3 +36,11 @@ def test_good_config_loads(tmp_path):
     assert config.start_date == date(2024, 1, 1)
     assert config.tiingo_symbols == ["NVDA"]
     assert config.max_invalid_share == 0.05
+
+
+def test_start_after_end_fails(tmp_path):
+    text = GOOD_CONFIG.replace("start_date = 2024-01-01", "start_date = 2025-01-01")
+    path = write_config(tmp_path, text)
+
+    with pytest.raises(ValueError, match="is after end_date"):
+        load_config(path)
