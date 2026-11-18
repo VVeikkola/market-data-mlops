@@ -44,3 +44,12 @@ def test_start_after_end_fails(tmp_path):
 
     with pytest.raises(ValueError, match="is after end_date"):
         load_config(path)
+
+
+def test_end_date_today_fails(tmp_path):
+    today = datetime.now(timezone.utc).date()
+    text = GOOD_CONFIG.replace("end_date = 2024-12-31", f"end_date = {today}")
+    path = write_config(tmp_path, text)
+
+    with pytest.raises(ValueError, match="must be before today"):
+        load_config(path)
