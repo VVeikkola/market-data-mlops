@@ -97,6 +97,32 @@ Thresholds (e.g. the 50 % daily return limit and the maximum share of invalid ro
 5. **Machine learning:** baseline, time-series validation, experiment comparison
 6. **MLOps:** MLflow, model registry, CI/CD, monitoring
 
+## How to run
+
+Requires [uv](https://docs.astral.sh/uv/) and a free [Tiingo](https://www.tiingo.com) API key.
+
+```bash
+git clone https://github.com/VVeikkola/market-data-mlops.git
+cd market-data-mlops
+uv sync
+cp .env.example .env              # then put your Tiingo API key in .env
+
+uv run python src/extract_tiingo.py      # raw NVDA prices  → data/raw/
+uv run python src/extract_coinbase.py    # raw BTC-USD prices → data/raw/
+uv run python src/run_validation.py      # quarantine report, exit code 1 on dataset errors
+uv run python src/transform.py           # clean table → data/clean/prices.parquet
+uv run python src/analyze.py NVDA 365    # holding-period returns for 365 days
+```
+
+Settings (symbols, date range, validation limits) are in `config.toml`.
+
+Tests and lint (the same checks run in CI on every push):
+
+```bash
+uv run pytest
+uv run ruff check .
+```
+
 ## Development environment
 
 The project is developed **Linux-first** (WSL2 on Windows) and is intended to run natively on any Linux machine after cloning. Configuration and secrets are provided through environment variables.
