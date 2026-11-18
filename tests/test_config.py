@@ -1,0 +1,38 @@
+from datetime import date, datetime, timezone
+
+import pytest
+
+from config import load_config
+
+GOOD_CONFIG = """
+[date_range]
+start_date = 2024-01-01
+end_date = 2024-12-31
+
+[tiingo]
+symbols = ["NVDA"]
+
+[coinbase]
+products = ["BTC-USD"]
+
+[validation]
+max_abs_daily_return = 0.5
+max_invalid_share = 0.05
+"""
+
+
+def write_config(tmp_path, text):
+    """Write config text to a temporary file and return its path."""
+    path = tmp_path / "config.toml"
+    path.write_text(text)
+    return path
+
+
+def test_good_config_loads(tmp_path):
+    path = write_config(tmp_path, GOOD_CONFIG)
+
+    config = load_config(path)
+
+    assert config.start_date == date(2024, 1, 1)
+    assert config.tiingo_symbols == ["NVDA"]
+    assert config.max_invalid_share == 0.05
