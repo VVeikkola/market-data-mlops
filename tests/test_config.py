@@ -53,3 +53,11 @@ def test_end_date_today_fails(tmp_path):
 
     with pytest.raises(ValueError, match="must be before today"):
         load_config(path)
+
+
+def test_empty_symbol_list_fails(tmp_path):
+    text = GOOD_CONFIG.replace('symbols = ["NVDA"]', "symbols = []")
+    path = write_config(tmp_path, text)
+
+    with pytest.raises(ValueError, match="tiingo.symbols must be a non-empty list"):
+        load_config(path)
