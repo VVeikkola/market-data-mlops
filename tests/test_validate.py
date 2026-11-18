@@ -11,6 +11,7 @@ from validate import (
     validate_prices,
 )
 
+
 def make_row(**overrides) -> pd.DataFrame:
     """One valid price row as a table. Pass a column name to change its value"""
     row = {

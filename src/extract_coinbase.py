@@ -1,7 +1,7 @@
 import logging
 import sys
 import time
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 import requests
 
@@ -22,7 +22,7 @@ def fetch_product(product_id: str, start_date: date, end_date: date) -> int:
     url = f"{BASE_URL}/{product_id}/candles"
 
     # One directory per fetch, one file per API response
-    fetched_at = datetime.now(timezone.utc)
+    fetched_at = datetime.now(UTC)
     run_dir = RAW_DIR / product_id / f"{fetched_at:%Y%m%dT%H%M%SZ}"
     run_dir.mkdir(parents=True, exist_ok=False)
 

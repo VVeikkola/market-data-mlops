@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import pytest
 
@@ -47,7 +47,7 @@ def test_start_after_end_fails(tmp_path):
 
 
 def test_end_date_today_fails(tmp_path):
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     text = GOOD_CONFIG.replace("end_date = 2024-12-31", f"end_date = {today}")
     path = write_config(tmp_path, text)
 

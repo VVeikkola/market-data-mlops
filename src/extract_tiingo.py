@@ -1,7 +1,7 @@
 import logging
 import os
 import sys
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import requests
 from dotenv import load_dotenv
@@ -28,7 +28,7 @@ def fetch_symbol(symbol: str, start_date: date, end_date: date, api_key: str) ->
     response.raise_for_status()
 
     # Save the raw response exactly as received, one file per fetch
-    fetched_at = datetime.now(timezone.utc)
+    fetched_at = datetime.now(UTC)
     output_dir = RAW_DIR / symbol
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{fetched_at:%Y%m%dT%H%M%SZ}.json"

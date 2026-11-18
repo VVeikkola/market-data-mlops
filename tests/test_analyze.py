@@ -3,6 +3,7 @@ import pytest
 
 from analyze import holding_period_returns, summarize
 
+
 def make_prices(prices: list[float])-> pd.DataFrame:
     """Small fake price table: one price per day starting 2024-01-01."""
     dates = pd.date_range("2024-01-01", periods=len(prices), freq="D", unit="us")

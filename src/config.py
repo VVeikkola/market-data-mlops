@@ -1,6 +1,6 @@
 import tomllib
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 # Project root = the parent of the src/ directory this file lives in
@@ -47,7 +47,7 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
     if config.start_date > config.end_date:
         raise ValueError(f"start_date {config.start_date} is after end_date {config.end_date}")
 
-    today_utc = datetime.now(timezone.utc).date()
+    today_utc = datetime.now(UTC).date()
     if config.end_date >= today_utc:
         raise ValueError(
             f"end_date {config.end_date} must be before today ({today_utc} UTC): "

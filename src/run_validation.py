@@ -1,6 +1,6 @@
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from config import PROJECT_ROOT, load_config
 from load_raw import load_all_raw
@@ -33,7 +33,7 @@ def main() -> int:
 
     if not result.quarantined.empty:
         QUARANTINE_DIR.mkdir(parents=True, exist_ok=True)
-        path = QUARANTINE_DIR / f"{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}.csv"
+        path = QUARANTINE_DIR / f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}.csv"
         result.quarantined.to_csv(path, index=False, mode="x")
         logger.warning(
             "%d row(s) broke hard rules, saved to %s",
