@@ -14,8 +14,17 @@ dev = [
     "ipykernel>=7.4.0",
     "nbstripout>=0.9.1",
     "pytest>=9.2.0",
+    "ruff>=0.17.5",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# TRY004: config errors stay ValueError, because run_validation.py catches ValueError
+# and shows a clean message instead of a traceback.
+ignore = ["TRY004"]
